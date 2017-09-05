@@ -1,0 +1,2 @@
+ci_labels;team_id;service_instance_id;status;subject;note;category;impact
+ARTEM-P;;;assigned;Test;1111;incident;High
