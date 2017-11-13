@@ -1,7 +1,7 @@
 #Developed by Artem.Ageev (c)
 #CreatedDate: 20.04.2017
-#UpdatedDate: 24.10.2017
-#v9
+#UpdatedDate: 13.11.2017
+#v9.1
 
 import os
 import sys
@@ -65,6 +65,7 @@ def main(argv):
 def enrich_request(request):
 	ci_info = [None]
 	si_id = ''
+	user_id = ''
 
 	if request_from_username:
 		ci_info = get_info_from_email(request['primary_email'])  #[error_msg, ci_ids, team_id, user_id]
@@ -78,14 +79,6 @@ def enrich_request(request):
 			request['requested_for_id'] = ci_info[3]
 			request['requested_by_id'] = ci_info[3]	
 
-	if request_for_CI_owner and request['ci_ids']:
-		user_id = get_CI_user(request['ci_ids'])
-		if user_id:
-			if not request['requested_by_id']:
-				request['requested_by_id'] = user_id
-			if not request['requested_for_id']:
-				request['requested_for_id'] = user_id
-	
 	if not request['ci_ids'] and request['ci_labels']:
 		ci_info = get_CI_info(request['ci_labels']) #will return error_msg, ci_ids, team_id
 		request['note'] += ''.join(ci_info[0]) 
@@ -93,7 +86,15 @@ def enrich_request(request):
 			request['ci_ids'] = ci_info[1]
 		if not request['team_id']:
 			request['team_id'] = ci_info[2]
-		
+
+	if request_for_CI_owner and request['ci_ids']:
+		user_id = get_CI_user(request['ci_ids'])
+		if user_id:
+			if not request['requested_by_id']:
+				request['requested_by_id'] = user_id
+			if not request['requested_for_id']:
+				request['requested_for_id'] = user_id
+			
 	if not request['service_instance_id'] and request['ci_ids']:
 		si_id = get_SI(request['ci_ids'][0]) 
 		if si_id:
@@ -204,7 +205,7 @@ def output_requests_N_to_file(number):
 
 #this will allow user to choose PROD or QA each time
 def set_environment(argv):
-	global ITRP_URL, HEADERS, PROXIES, CONNECTION_DELAY, API_TOKEN, DEFAULT_TEAM_ID, DEFAULT_CI_ID, DEFAULT_SI_ID, DEFAULT_USER_ID
+	global ITRP_URL, HEADERS, PROXIES, CONNECTION_DELAY, API_TOKEN, DEFAULT_TEAM_ID, DEFAULT_SI_ID, DEFAULT_USER_ID
 	global filename, request_for_CI_owner, request_from_username, USE_PROXY, VERBOSE, DONT_RESOLVE_ANYTHING
 	## <BANNER> ##
 	print("============================= CSV to ITRP script =============================")
@@ -221,7 +222,6 @@ def set_environment(argv):
 	HEADERS = config._sections['ITRP Headers']
 	PROXIES = config._sections['Proxy']
 	CONNECTION_DELAY = config.getfloat('Connection settings', 'CONNECTION_DELAY')
-	DEFAULT_CI_ID = config.getint('Defaults', 'DEFAULT_CI_ID')
 	DEFAULT_TEAM_ID = config.get('Defaults', 'DEFAULT_TEAM_ID')
 	DEFAULT_SI_ID = config.get('Defaults', 'DEFAULT_SI_ID')
 	DEFAULT_USER_ID = config.get('Defaults', 'DEFAULT_USER_ID')
