@@ -21,27 +21,13 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 template_request = dict.fromkeys(['ci_labels', 'ci_ids', 'service_instance_id', 'team_id', 'status', 'subject', 'note', 'category', \
 				'impact', 'requested_by_id', 'requested_for_id', 'primary_email', 'name'])
 
-## Typical request consists of this variables:
-# ci_labels=["CEU-LT143503", "CEU-LT139444", "CBL-LT000094"]
-# ci_ids = [540396, 442754]
-# service_instance_id = "35456"
-# team_id = "5807"
-# status = "assigned"
-# subject = "test3"
-# note = "testtest3"
-# category = "incident" # or "rfi"
-# impact = "low"
-# (optional)
-# requested_by_id = 1250158
-# requested_for_id = 1250158
+## get your token here https://.itrp.qa/account/personal_information
 
-## get your token here https://canonit.itrp.qa/account/personal_information
-
-## To pretty print requests:
+## To pretty print requests
 # print(json.dumps(r.json(), indent=4, sort_keys=True)) #where r is server output
 
 ## Curl example
-# curl --header "X-ITRP-Account: canonit" https://api.itrp.com/v1/people?api_token=&name="Artem Ageev"
+# curl --header "X-ITRP-Account: " https://api.itrp.com/v1/people?api_token=&name="Artem Ageev"
 
 def main(argv):
 	#choose between prod and QA environment, get configuration, read parameters
@@ -159,8 +145,8 @@ def get_SI(ci_ids):
 	return si_id
 
 def get_CI_user(ci_ids):
-	#will return ID of the owner of CI (e.g. 1250158 for Artem Ageev)
-	#test URL: https://api.itrp.qa/v1/cis/540396/users?api_token=<TOKEN>
+	#will return ID of the owner of CI 
+	#test URL: https://api.itrp.qa/v1/cis//users?api_token=<TOKEN>
 	if type(ci_ids) == list:
 		ci_id = ci_ids[0]
 	else:
@@ -209,7 +195,6 @@ def set_environment(argv):
 	global filename, request_for_CI_owner, request_from_username, USE_PROXY, VERBOSE, DONT_RESOLVE_ANYTHING
 	## <BANNER> ##
 	print("============================= CSV to ITRP script =============================")
-	print("(c) Artyom Ageyev artem.ageev@canon-europe.com ")
 	## </BANNER> ##
 
 	# Read config
