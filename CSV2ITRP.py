@@ -1,7 +1,7 @@
 #Developed by Artem.Ageev (c)
 #CreatedDate: 20.04.2017
-#UpdatedDate: 13.11.2017
-#v9.1
+#UpdatedDate: 26.02.2018
+#v9.2
 
 import os
 import sys
@@ -23,11 +23,11 @@ template_request = dict.fromkeys(['ci_labels', 'ci_ids', 'service_instance_id', 
 
 ## get your token here https://.itrp.qa/account/personal_information
 
-## To pretty print requests
+## To pretty print requests:
 # print(json.dumps(r.json(), indent=4, sort_keys=True)) #where r is server output
 
 ## Curl example
-# curl --header "X-ITRP-Account: " https://api.itrp.com/v1/people?api_token=&name="Artem Ageev"
+# curl --header "X-ITRP-Account: " https://api.itrp.com/v1/people?api_token=&name=""
 
 def main(argv):
 	#choose between prod and QA environment, get configuration, read parameters
@@ -112,9 +112,8 @@ def get_CI_info(ci_labels):
 	try:
 		ci_ids.append(r.json()[0][u'id'])
 	except:
-		print("[Warning] " + str(ci_labels) + " not exists in ITRP")
-		error_msg.append(" [Warning] Affected CI <" + str(ci_labels) + "> not exists in ITRP. Please add it.")
-
+		print("[Warning] " + str(ci_labels) + " not exists in IT Portal")
+		error_msg.append(" [Warning] Affected CI <" + str(ci_labels) + "> does not exist in IT Portal. Please add it.")
 
 	try:
 		team_id = r.json()[0][u'support_team'][u'id']
@@ -146,7 +145,7 @@ def get_SI(ci_ids):
 
 def get_CI_user(ci_ids):
 	#will return ID of the owner of CI 
-	#test URL: https://api.itrp.qa/v1/cis//users?api_token=<TOKEN>
+	#test URL: https://api.itrp.qa/v1/cis/540396/users?api_token=<TOKEN>
 	if type(ci_ids) == list:
 		ci_id = ci_ids[0]
 	else:
@@ -173,10 +172,14 @@ def create_request(request):
 	request['api_token'] = API_TOKEN
 	cleaned_request = {k: v for k, v in request.items() if v}  #remove empty keys
 	time.sleep(CONNECTION_DELAY)
-	if USE_PROXY:
-		r = requests.post(ITRP_URL+"requests", data=json.dumps(cleaned_request), headers = HEADERS, proxies=PROXIES, verify=False)
-	else:
-		r = requests.post(ITRP_URL+"requests", data=json.dumps(cleaned_request), headers = HEADERS)
+
+	try:
+		if USE_PROXY:
+			r = requests.post(ITRP_URL+"requests", data=json.dumps(cleaned_request), headers = HEADERS, proxies=PROXIES, verify=False)
+		else:
+			r = requests.post(ITRP_URL+"requests", data=json.dumps(cleaned_request), headers = HEADERS)
+	except requests.exceptions.SSLError as e:
+		print("[Error] Message:" + e )
 
 	try:
 		print("[INFO] request N " + str(r.json()[u'id']) + " successfully created")
@@ -184,6 +187,8 @@ def create_request(request):
 	except:
 		if u"errors" in r.json():
 			print("[Error] request not created. CI: " + request["ci_labels"] + ". Error MSG:" + str(r.json()[u'errors']))
+		else:
+			print("[Error] Unknown error")
 
 def output_requests_N_to_file(number):
 	with open('csv2itrp.log', 'a') as fp:
@@ -195,6 +200,7 @@ def set_environment(argv):
 	global filename, request_for_CI_owner, request_from_username, USE_PROXY, VERBOSE, DONT_RESOLVE_ANYTHING
 	## <BANNER> ##
 	print("============================= CSV to ITRP script =============================")
+	print("(c) Artyom Ageyev ")
 	## </BANNER> ##
 
 	# Read config
@@ -249,7 +255,7 @@ def set_environment(argv):
 			use_QA = True
 
 	#Choose between PROD or QA
-	print("Please choose ITRP environment:")
+	print("Please choose IT Portal environment:")
 	print("    1. Production (url: ", ITRP_URL_PROD, ")")
 	print("    2. QA (url: ", ITRP_URL_QA, ")")
 
@@ -289,7 +295,7 @@ def get_info_from_email(primary_email):
 		user_id = r.json()[0][u'id']
 	except:
 		print('[Warning] Could not get user_id for email:'+ str(primary_email))
-		return ['[ERROR] User "' + str(primary_email) + '" does not exist in ITRP', None, None, None]
+		return ['[ERROR] User "' + str(primary_email) + '" does not exist in IT Portal', None, None, None]
 
 	if user_id:
 		time.sleep(CONNECTION_DELAY)
